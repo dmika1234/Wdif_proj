@@ -166,3 +166,47 @@ calculate_execution_am_call_cost <- function(S0, K, T, delta_t, u, d, r){
 }
 
 
+# Ostateczna funkcja
+analize_opt <- function(S0, K, T, delta_t, u, d, r, call_opt = TRUE, opt_type = "E"){
+  
+  time_vec <- seq(from = 0 , to = T, by = delta_t)
+  n <- length(time_vec)
+  price_tree <- generate_price_tree(S0, u, d, n - 1)
+  
+  p <- (price_tree[[n-1]][1] * exp(r * delta_t) - price_tree[[n]][2]) /
+    (price_tree[[n]][1] - price_tree[[n]][2])
+  
+  if(call_opt){
+    payoff_FUN <- calc_payoff_call
+  }else{
+    payoff_FUN <- calc_payoff_put
+  }
+  
+  costs <- vector(mode = "list", length = n)
+  costs[[n]] <- payoff_FUN(K, price_tree[[n]])
+  
+  execution_moments <- vector(mode = "list", length = n)
+  execution_moments[[n]] <- payoff_FUN(K, price_tree[[n]]) > 0
+  
+  for(i in rev(2:n)){
+    costs_matrix <- matrix(c(costs[[i]][1],
+                             rep(costs[[i]][-c(1, i)], each = ifelse(i == 2, 0, 2)),
+                             costs[[i]][i]), ncol = i - 1)
+    p_matrix <- matrix(rep(c(p, 1-p), i - 1), ncol = i - 1)
+    if(opt_type == "E"){
+      costs[[i-1]] <- exp(-r * delta_t) * apply(costs_matrix * p_matrix, 2, sum)
+    }
+    if(opt_type == "A"){
+      costs[[i-1]] <- apply(matrix(c(exp(-r * delta_t) * apply(costs_matrix * p_matrix, 2, sum),
+                                     payoff_FUN(K,price_tree[[i-1]])), byrow = T, nrow = 2), 2, max)
+      execution_moments[[i-1]]<- costs[[i-1]] < payoff_FUNl(K, price_tree[[i-1]])
+    }
+  }
+  results <- list(prices = price_tree, costs = costs, execution_moments = execution_moments, time = time_vec)
+  return(results)
+}
+
+
+
+
+
