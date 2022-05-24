@@ -202,6 +202,7 @@ analize_opt <- function(S0, K, T, delta_t, u, d, r, call_opt = TRUE, opt_type = 
     p_matrix <- matrix(rep(c(p, 1-p), i - 1), ncol = i - 1)
     if(opt_type == "E"){
       costs[[i-1]] <- exp(-r * delta_t) * apply(costs_matrix * p_matrix, 2, sum)
+      execution_moments[[i-1]] <- rep(FALSE, length(costs[[i-1]]))
     }
     if(opt_type == "A"){
       costs[[i-1]] <- apply(matrix(c(exp(-r * delta_t) * apply(costs_matrix * p_matrix, 2, sum),
