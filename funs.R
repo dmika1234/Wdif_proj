@@ -133,7 +133,7 @@ calculate_ex_moments_am_put<- function(S0, K, T, delta_t, u, d, r){
                              rep(costs[[i]][-c(1, i)], each = ifelse(i == 2, 0, 2)),
                              costs[[i]][i]), ncol = i - 1)
     p_matrix <- matrix(rep(c(p, 1-p), i - 1), ncol = i - 1)
-    costs[[i-1]] <-exp(-r * delta_t) * apply(costs_matrix * p_matrix, 2, sum)
+    costs[[i-1]] <- exp(-r * delta_t) * apply(costs_matrix * p_matrix, 2, sum)
     execution_moments[[i-1]]<- costs[[i-1]]<calc_payoff_put(K, price_tree[[i-1]])
     }
   return(execution_moments)
@@ -158,7 +158,7 @@ calculate_execution_am_call_cost <- function(S0, K, T, delta_t, u, d, r){
                              rep(costs[[i]][-c(1, i)], each = ifelse(i == 2, 0, 2)),
                              costs[[i]][i]), ncol = i - 1)
     p_matrix <- matrix(rep(c(p, 1-p), i - 1), ncol = i - 1)
-    costs[[i-1]] <- apply(matrix(c(exp(-r * delta_t) * apply(costs_matrix * p_matrix, 2, sum),calc_payoff_call(K,price_tree[[i-1]])),byrow=T,nrow=2),2,max)
+    costs[[i-1]] <- exp(-r * delta_t) * apply(costs_matrix * p_matrix, 2, sum)
     execution_moments[[i-1]]<- costs[[i-1]]<calc_payoff_call(K, price_tree[[i-1]])
   }
   
@@ -206,7 +206,7 @@ analize_opt <- function(S0, K, T, delta_t, u, d, r, call_opt = TRUE, opt_type = 
     }
     if(opt_type == "A"){
       costs[[i-1]] <- apply(matrix(c(exp(-r * delta_t) * apply(costs_matrix * p_matrix, 2, sum),
-                                     payoff_FUN(K,price_tree[[i-1]])), byrow = T, nrow = 2), 2, max)
+                                     payoff_FUN(K,price_tree[[i-1]])), byrow = TRUE, nrow = 2), 2, max)
       cost <- exp(-r * delta_t) * apply(costs_matrix * p_matrix, 2, sum)
       execution_moments[[i-1]] <- cost < payoff_FUN(K, price_tree[[i-1]])
     }
