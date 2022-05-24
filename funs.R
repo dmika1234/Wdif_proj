@@ -181,6 +181,7 @@ analize_opt <- function(S0, K, T, delta_t, u, d, r, call_opt = TRUE, opt_type = 
   }else{
     payoff_FUN <- calc_payoff_put
   }
+
   
   costs <- vector(mode = "list", length = n)
   costs[[n]] <- payoff_FUN(K, price_tree[[n]])
@@ -188,6 +189,12 @@ analize_opt <- function(S0, K, T, delta_t, u, d, r, call_opt = TRUE, opt_type = 
   execution_moments <- vector(mode = "list", length = n)
   execution_moments[[n]] <- payoff_FUN(K, price_tree[[n]]) > 0
   
+  final_df <- data.frame(price = price_tree[[n]])
+  final_df$costs <- costs[[n]]
+  final_df$time <- time_vec[n]
+  final_df$if_executed <- execution_moments[[n]]
+    
+    
   for(i in rev(2:n)){
     costs_matrix <- matrix(c(costs[[i]][1],
                              rep(costs[[i]][-c(1, i)], each = ifelse(i == 2, 0, 2)),
@@ -199,11 +206,15 @@ analize_opt <- function(S0, K, T, delta_t, u, d, r, call_opt = TRUE, opt_type = 
     if(opt_type == "A"){
       costs[[i-1]] <- apply(matrix(c(exp(-r * delta_t) * apply(costs_matrix * p_matrix, 2, sum),
                                      payoff_FUN(K,price_tree[[i-1]])), byrow = T, nrow = 2), 2, max)
-      execution_moments[[i-1]]<- costs[[i-1]] < payoff_FUNl(K, price_tree[[i-1]])
+      cost <- exp(-r * delta_t) * apply(costs_matrix * p_matrix, 2, sum)
+      execution_moments[[i-1]] <- cost < payoff_FUN(K, price_tree[[i-1]])
     }
+    final_df <- rbind(final_df,
+                      data.frame(price = price_tree[[i-1]], costs = costs[[i-1]],
+                                 time = rep(time_vec[i-1], length(price_tree[[i-1]])),
+                                 if_executed = execution_moments[[i-1]]))
   }
-  results <- list(prices = price_tree, costs = costs, execution_moments = execution_moments, time = time_vec)
-  return(results)
+  return(final_df)
 }
 
 
