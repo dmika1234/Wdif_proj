@@ -11,7 +11,8 @@ u <- exp(sigma * sqrt(delta_t))
 d <- exp(-sigma * sqrt(delta_t))
 r <- 0.02
 
-
+analize_opt(S0 = S0, K = 1000, T = T, delta_t = delta_t,
+            u = u, d = d, r = r, opt_type = "E", call_opt = TRUE)
 
 #==================== Calculating option prices ========================
 eu_call_price <- as.numeric(analize_opt(S0 = S0, K = K, T = T, delta_t = delta_t,
