@@ -100,3 +100,51 @@ pricing_time1<-data.frame(steps=rep(c(1:30),4),type=rep(c("european put","americ
 pricing_time1 # tabelka do wykresu 
 ggplot(pricing_time1,aes(x=steps,y=price,color=type,alpha=0.3))+geom_line(size=1,position=position_jitter(w=0.05, h=0.04))+theme_bw()+ggtitle("Wrażliwość ceny opcji na liczbę kroków")
 
+# analiza wrazliwosci 
+ggplot(strike,aes(x = strike))+
+  geom_line(aes(y= V2,colour = 'european call'))+
+  geom_line(aes(y=V3,colour='european put'))+
+  geom_line(aes(y=V4,colour='asian call'))+geom_line(aes(y=V5,colour='asian put'))+
+  scale_color_manual(name="option",breaks = c("european call","european put","asian call","asian put"),
+                     values=c("green","orange","yellow","blue"))+
+  ylab("cost")
+
+
+ggplot(s0,aes(x = s0))+
+  geom_line(aes(y= V2,colour = 'european call'))+
+  geom_line(aes(y=V3,colour='european put'))+
+  geom_line(aes(y=V4,colour='asian call'))+geom_line(aes(y=V5,colour='asian put'))+
+  scale_color_manual(name="option",breaks = c("european call","european put","asian call","asian put"),
+                     values=c("green","orange","yellow","blue"))+
+  ylab("cost")+
+  xlab("S0")
+
+
+ggplot(sig,aes(x = sig))+
+  geom_line(aes(y= V2,colour = 'european call'))+
+  geom_line(aes(y=V3,colour='european put'))+
+  geom_line(aes(y=V4,colour='asian call'))+geom_line(aes(y=V5,colour='asian put'))+
+  scale_color_manual(name="option",breaks = c("european call","european put","asian call","asian put"),
+                     values=c("green","orange","yellow","blue"))+
+  ylab("cost")+
+  xlab("sigma")
+
+
+ggplot(t,aes(x = t))+
+  geom_line(aes(y= V2,colour = 'european call'))+
+  geom_line(aes(y=V3,colour='european put'))+
+  geom_line(aes(y=V4,colour='asian call'))+geom_line(aes(y=V5,colour='asian put'))+
+  scale_color_manual(name="option",breaks = c("european call","european put","asian call","asian put"),
+                     values=c("green","orange","yellow","blue"))+
+  ylab("cost")+
+  xlab("zapadalnosc")
+
+
+ggplot(er,aes(x = er))+
+  geom_line(aes(y= V2,colour = 'european call'))+
+  geom_line(aes(y=V3,colour='european put'))+
+  geom_line(aes(y=V4,colour='asian call'))+geom_line(aes(y=V5,colour='asian put'))+
+  scale_color_manual(name="option",breaks = c("european call","european put","asian call","asian put"),
+                     values=c("green","orange","yellow","blue"))+
+  ylab("cost")+
+  xlab("r")
