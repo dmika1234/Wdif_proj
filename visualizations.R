@@ -13,6 +13,10 @@ u <- exp(sigma * sqrt(delta_t))
 d <- exp(-sigma * sqrt(delta_t))
 r <- 0.02
 
+
+
+
+# ============= Analiza momentów wykonania
 # Results for ==AMERICAN PUT==
 res1 <- analize_opt(S0 = S0, K = K, T = 1, delta_t = delta_t,
                    u = u, d = d, r = r, opt_type = "A", call_opt = FALSE)
@@ -65,8 +69,6 @@ ggplot() +
   geom_line(data = border_pointst, aes(x = time, y = maks), color = 'green', size = 1) + 
   coord_trans(y = "log2")
 
-
-
 # PLot with predicted
 ggplot() +
   theme_bw() +
@@ -75,7 +77,7 @@ ggplot() +
   geom_line(data = border_pointst, aes(x = time, y = maks), color = 'green', size = 1) +
   geom_line(data = border_pointst, aes(x = time, y = predicted_maks), color = 'red', linetype = 'dashed') +
   coord_trans(y = "log2")
-
+#===========================
 
 
 #Wrażliwosć ceny na delta_t
