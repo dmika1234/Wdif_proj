@@ -237,9 +237,9 @@ analize_opt2 <- function(S0, K, T, delta_t, u, d, r, call_opt = TRUE, opt_type =
   costs <- vector(mode = "list", length = n)
   costs[[n]] <- payoff_FUN(K, price_tree[[n]])
   shares<-vector(mode = "list", length = n)
-  shares[[n]]<-rep("-",n)
+  shares[[n]]<-rep(NA,n)
   cash<-vector(mode = "list", length = n)
-  cash[[n]]<-rep("-",n)
+  cash[[n]]<-rep(NA, n)
   execution_moments <- vector(mode = "list", length = n)
   execution_moments[[n]] <- payoff_FUN(K, price_tree[[n]]) > 0
   
@@ -275,9 +275,10 @@ analize_opt2 <- function(S0, K, T, delta_t, u, d, r, call_opt = TRUE, opt_type =
   return(final_df)
 }
 
-analize_opt (S0, K, T, delta_t, u, d, r, call_opt = FALSE, opt_type = "E")
-analize_opt (S0, K, T, delta_t, u, d, r, call_opt = TRUE, opt_type = "E")
-analize_opt (S0, K, T, delta_t, u, d, r, call_opt = FALSE, opt_type = "A")
-analize_opt (S0, K, T, delta_t, u, d, r, call_opt = TRUE, opt_type = "A")
+# analize_opt (S0, K, T, delta_t, u, d, r, call_opt = FALSE, opt_type = "E")
+# analize_opt (S0, K, T, delta_t, u, d, r, call_opt = TRUE, opt_type = "E")
+# analize_opt (S0, K, T, delta_t, u, d, r, call_opt = FALSE, opt_type = "A")
+# analize_opt (S0, K, T, delta_t, u, d, r, call_opt = TRUE, opt_type = "A")
+
 
 

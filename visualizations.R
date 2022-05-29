@@ -97,6 +97,7 @@ for ( i in Delta_t){
 }
 
 pricing_time1<-data.frame(steps=rep(c(1:30),4),type=rep(c("european put","american put","european call","american call"),each=30),price=c(put_e_price,put_a_price,call_e_price,call_a_price))
+write.csv(pricing_time1,"deltat.csv", row.names = FALSE)
 pricing_time1 # tabelka do wykresu 
 ggplot(pricing_time1,aes(x=steps,y=price,color=type,alpha=0.3))+geom_line(size=1,position=position_jitter(w=0.05, h=0.04))+theme_bw()+ggtitle("Wrażliwość ceny opcji na liczbę kroków")
 
