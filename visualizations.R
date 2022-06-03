@@ -120,12 +120,8 @@ ggplot() +
   scale_color_manual(labels=c("Nie", "Tak"), values=c("orange", "cyan")) +
   theme(plot.title = element_text(hjust = 0.5))
 #===========================
-
-
-
-
 #Wrażliwosć ceny na delta_t
-Delta_t<-c(T/(1:30)) 
+Delta_t<-c(T/(1:150))
 put_e_price<-c()
 put_a_price<-c()
 call_e_price<-c()
@@ -139,12 +135,9 @@ for ( i in Delta_t){
   call_e_price[which(Delta_t==i)]<-analize_opt(S0, K, T,i,u,d,r, call_opt = TRUE, opt_type = "E")[a,2]
   call_a_price[which(Delta_t==i)]<-analize_opt(S0, K, T,i,u,d,r, call_opt = TRUE, opt_type = "A")[a,2]
 }
-
-pricing_time1<-data.frame(steps=rep(c(1:30),4),type=rep(c("european put","american put","european call","american call"),each=30),price=c(put_e_price,put_a_price,call_e_price,call_a_price))
-write.csv(pricing_time1,"deltat.csv", row.names = FALSE)
-pricing_time1 # tabelka do wykresu 
-ggplot(pricing_time1,aes(x=steps,y=price,color=type,alpha=0.3))+geom_line(size=1,position=position_jitter(w=0.05, h=0.04))+theme_bw()+ggtitle("Wrażliwość ceny opcji na liczbę kroków")
-
+pricing_time2<-data.frame(steps=rep(c(1:150),4),type=rep(c("european put","american put","european call","american call"),each=150),price=c(put_e_price,put_a_price,call_e_price,call_a_price))
+pricing_time2 #tabelka dp wykresu
+ggplot(pricing_time2,aes(x=steps,y=price,color=type,alpha=0.3))+geom_line(size=1)+theme_bw()+ggtitle("Wrażliwość ceny opcji na liczbę kroków")+theme(plot.title=element_text(hjust=0.5))
 # analiza wrazliwosci 
 ggplot(strike,aes(x = strike))+
   geom_line(aes(y= V2,colour = 'european call'))+
