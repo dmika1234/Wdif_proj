@@ -16,7 +16,7 @@ r <- 0.02
 
 
 
-# ============= Analiza momentów wykonania
+# ============= Analiza momentów wykonania i podstawowe wykresy
 # Results for ==AMERICAN PUT==
 res1 <- analize_opt(S0 = S0, K = K, T = 1, delta_t = delta_t,
                    u = u, d = d, r = r, opt_type = "A", call_opt = FALSE)
@@ -51,7 +51,7 @@ model_barrier <- lm(data = border_points, formula = maks ~ poly(time, 22) + poly
 
 # Log-scale: + coord_trans(y = "log2")
 t <- 2
-rest <- analize_opt(S0 = S0, K = K, T = t, delta_t = delta_t,
+rest <- analize_opt(S0 = S0, K = K, T = 2, delta_t = delta_t,
                     u = u, d = d, r = r, opt_type = "A", call_opt = FALSE)
 border_pointst <- rest %>% 
   filter(if_executed == TRUE) %>% 
@@ -61,23 +61,63 @@ border_pointst <- border_pointst %>%
   mutate(T = t, predicted_maks = predict(model_barrier, newdata = data.frame(time = border_pointst$time, T = t)))
 
 
-# Basic plot
-ggplot() +
+########
+# Basic plot e-c
+resec <- analize_opt(S0 = S0, K = K, T = 2, delta_t = delta_t,
+                     u = u, d = d, r = r, opt_type = "E", call_opt = TRUE)
+ggplot(resec) +
   theme_bw() +
-  geom_point(data = rest, aes(x = time, y = price, color = if_executed)) +
-  geom_hline(yintercept = K) +
-  geom_line(data = border_pointst, aes(x = time, y = maks), color = 'green', size = 1) + 
-  coord_trans(y = "log2")
+  geom_point(aes(x = time, y = price, color = if_executed)) +
+  geom_hline(yintercept = K, color = "blue") +
+  geom_text(aes(0.03, K,label = paste("K=", K), vjust = -1.5), color = "blue") +
+  coord_trans(y = "log2") +
+  labs(color = "Czy wykonano", x = "Czas", y="Cena aktywa") +
+  scale_color_manual(labels=c("Nie", "Tak"), values=c("orange", "cyan"))
 
-# PLot with predicted
+# Basic plot e-p
+resep <- analize_opt(S0 = S0, K = K, T = 2, delta_t = delta_t,
+                     u = u, d = d, r = r, opt_type = "E", call_opt = FALSE)
+ggplot(resep) +
+  theme_bw() +
+  geom_point(aes(x = time, y = price, color = if_executed)) +
+  geom_hline(yintercept = K, color = "blue") +
+  geom_text(aes(0.03, K,label = paste("K=", K), vjust = -1.5), color = "blue") +
+  coord_trans(y = "log2") +
+  labs(color = "Czy wykonano", x = "Czas", y="Cena aktywa") +
+  scale_color_manual(labels=c("Nie", "Tak"), values=c("orange", "cyan"))
+
+# Basic plot a-p
+resap <- analize_opt(S0 = S0, K = K, T = 2, delta_t = delta_t,
+                    u = u, d = d, r = r, opt_type = "A", call_opt = FALSE)
+ggplot(resap) +
+  theme_bw() +
+  geom_point(aes(x = time, y = price, color = if_executed)) +
+  geom_hline(yintercept = K, color = "blue") +
+  geom_text(aes(0.03, K,label = paste("K=", K), vjust = -1.5), color = "blue") +
+  coord_trans(y = "log2") +
+  labs(color = "Czy wykonano", x = "Czas", y="Cena aktywa") +
+  scale_color_manual(labels=c("Nie", "Tak"), values=c("orange", "cyan"))
+
+# A-P PLot with predicted
+border_pointst <- resap %>% 
+  filter(if_executed == TRUE) %>% 
+  group_by(time) %>% 
+  summarise(maks = max(price))
+border_pointst <- border_pointst %>% 
+  mutate(T = 2, predicted_maks = predict(model_barrier, newdata = data.frame(time = border_pointst$time, T = 2)))
+
 ggplot() +
   theme_bw() +
-  geom_point(data = rest, aes(x = time, y = price, color = if_executed)) +
+  geom_point(data = resap, aes(x = time, y = price, color = if_executed)) +
   geom_hline(yintercept = K) +
-  geom_line(data = border_pointst, aes(x = time, y = maks), color = 'green', size = 1) +
-  geom_line(data = border_pointst, aes(x = time, y = predicted_maks), color = 'red', linetype = 'dashed') +
-  coord_trans(y = "log2")
+  geom_line(data = border_pointst, aes(x = time, y = maks, linetype = 'Prawdziwy'), color = 'green', size = 1) +
+  geom_line(data = border_pointst, aes(x = time, y = predicted_maks, linetype = 'Przewidziany'), color = 'red') +
+  coord_trans(y = "log2") +
+  labs(color = "Czy wykonano", x = "Czas", y = "Cena aktywa", linetype = "Podział\nmomentów\nwykonania") +
+  scale_color_manual(labels=c("Nie", "Tak"), values=c("orange", "cyan"))
 #===========================
+
+
 
 
 #Wrażliwosć ceny na delta_t
