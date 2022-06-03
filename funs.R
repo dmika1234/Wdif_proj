@@ -275,10 +275,10 @@ analize_opt2 <- function(S0, K, T, delta_t, u, d, r, call_opt = TRUE, opt_type =
   return(final_df)
 }
 
-# analize_opt (S0, K, T, delta_t, u, d, r, call_opt = FALSE, opt_type = "E")
-# analize_opt (S0, K, T, delta_t, u, d, r, call_opt = TRUE, opt_type = "E")
-# analize_opt (S0, K, T, delta_t, u, d, r, call_opt = FALSE, opt_type = "A")
-# analize_opt (S0, K, T, delta_t, u, d, r, call_opt = TRUE, opt_type = "A")
+# analize_opt2 (S0, K, T, delta_t, u, d, r, call_opt = FALSE, opt_type = "E")
+# analize_opt2 (S0, K, T, delta_t, u, d, r, call_opt = TRUE, opt_type = "E")
+# analize_opt2 (S0, K, T, delta_t, u, d, r, call_opt = FALSE, opt_type = "A")
+# analize_opt2 (S0, K, T, delta_t, u, d, r, call_opt = TRUE, opt_type = "A")
 
 
 
