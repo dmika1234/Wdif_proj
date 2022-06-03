@@ -71,8 +71,9 @@ ggplot(resec) +
   geom_hline(yintercept = K, color = "blue") +
   geom_text(aes(0.03, K,label = paste("K=", K), vjust = -1.5), color = "blue") +
   coord_trans(y = "log2") +
-  labs(color = "Czy wykonano", x = "Czas", y="Cena aktywa") +
-  scale_color_manual(labels=c("Nie", "Tak"), values=c("orange", "cyan"))
+  labs(title = "Opcja europejska call", color = "Czy wykonano", x = "Czas", y="Cena aktywa") +
+  scale_color_manual(labels=c("Nie", "Tak"), values=c("orange", "cyan")) +
+  theme(plot.title = element_text(hjust = 0.5))
 
 # Basic plot e-p
 resep <- analize_opt(S0 = S0, K = K, T = 2, delta_t = delta_t,
@@ -83,8 +84,9 @@ ggplot(resep) +
   geom_hline(yintercept = K, color = "blue") +
   geom_text(aes(0.03, K,label = paste("K=", K), vjust = -1.5), color = "blue") +
   coord_trans(y = "log2") +
-  labs(color = "Czy wykonano", x = "Czas", y="Cena aktywa") +
-  scale_color_manual(labels=c("Nie", "Tak"), values=c("orange", "cyan"))
+  labs(title = "Opcja europejska put", color = "Czy wykonano", x = "Czas", y="Cena aktywa") +
+  scale_color_manual(labels=c("Nie", "Tak"), values=c("orange", "cyan")) +
+  theme(plot.title = element_text(hjust = 0.5))
 
 # Basic plot a-p
 resap <- analize_opt(S0 = S0, K = K, T = 2, delta_t = delta_t,
@@ -95,8 +97,9 @@ ggplot(resap) +
   geom_hline(yintercept = K, color = "blue") +
   geom_text(aes(0.03, K,label = paste("K=", K), vjust = -1.5), color = "blue") +
   coord_trans(y = "log2") +
-  labs(color = "Czy wykonano", x = "Czas", y="Cena aktywa") +
-  scale_color_manual(labels=c("Nie", "Tak"), values=c("orange", "cyan"))
+  labs(title = "Opcja amerykańska put", color = "Czy wykonano", x = "Czas", y="Cena aktywa") +
+  scale_color_manual(labels=c("Nie", "Tak"), values=c("orange", "cyan")) +
+  theme(plot.title = element_text(hjust = 0.5))
 
 # A-P PLot with predicted
 border_pointst <- resap %>% 
@@ -114,7 +117,8 @@ ggplot() +
   geom_line(data = border_pointst, aes(x = time, y = predicted_maks, linetype = 'Przewidziany'), color = 'red') +
   coord_trans(y = "log2") +
   labs(color = "Czy wykonano", x = "Czas", y = "Cena aktywa", linetype = "Podział\nmomentów\nwykonania") +
-  scale_color_manual(labels=c("Nie", "Tak"), values=c("orange", "cyan"))
+  scale_color_manual(labels=c("Nie", "Tak"), values=c("orange", "cyan")) +
+  theme(plot.title = element_text(hjust = 0.5))
 #===========================
 
 
