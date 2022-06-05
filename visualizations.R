@@ -138,7 +138,7 @@ for ( i in Delta_t){
 library(ggplot2)
 pricing_time2<-data.frame(liczba_kroków=rep(c(1:150),4),typ=rep(c("europejski put","amerykański put","europejski call","amerykański call"),each=150),cena=c(put_e_price,put_a_price,call_e_price,call_a_price))
 pricing_time2# tabelka do wykresu
-ggplot(pricing_time2,aes(x=liczba_kroków,y=cena,color=typ,alpha=0.3))+geom_line(size=1)+theme_bw()+ggtitle("Wrażliwość ceny opcji na liczbę kroków")+theme(plot.title=element_text(hjust=0.5))+xlab("liczba kroków")
+ggplot(pricing_time2,aes(x=liczba_kroków,y=cena,color=typ))+geom_line(size=1)+theme_bw()+ggtitle("Wrażliwość ceny opcji na liczbę kroków")+theme(plot.title=element_text(hjust=0.5))+xlab("liczba kroków")
 # analiza wrazliwosci 
 ggplot(strike,aes(x = strike))+
   geom_line(aes(y= V2,colour = 'european call'))+
