@@ -149,7 +149,110 @@ calculate_execution_am_call_cost <- function(S0, K, T, delta_t, u, d, r){
 ##################################################################################
 #               WIZUALIZACJE
 ##################################################################################
+# ============= Analiza momentów wykonania i podstawowe wykresy
+# Results for ==AMERICAN PUT==
+res1 <- analize_opt(S0 = S0, K = K, T = 1, delta_t = delta_t,
+                   u = u, d = d, r = r, opt_type = "A", call_opt = FALSE)
+res3 <- analize_opt(S0 = S0, K = K, T = 3, delta_t = delta_t,
+                    u = u, d = d, r = r, opt_type = "A", call_opt = FALSE)
+res6 <- analize_opt(S0 = S0, K = K, T = 6, delta_t = delta_t,
+                   u = u, d = d, r = r, opt_type = "A", call_opt = FALSE)
 
+
+# Analazing border points
+border_points1 <- res1 %>% 
+  filter(if_executed == TRUE) %>% 
+  group_by(time) %>% 
+  summarise(maks = max(price)) %>% 
+  mutate(T = 1)
+border_points3 <- res3 %>% 
+  filter(if_executed == TRUE) %>% 
+  group_by(time) %>% 
+  summarise(maks = max(price)) %>% 
+  mutate(T = 3)
+border_points6 <- res6 %>% 
+  filter(if_executed == TRUE) %>% 
+  group_by(time) %>% 
+  summarise(maks = max(price)) %>% 
+  mutate(T = 6)
+
+border_points <- rbind(border_points1, border_points3, border_points6)
+model_barrier <- lm(data = border_points, formula = maks ~ poly(time, 22) + poly(T, 2))
+
+
+
+
+# Log-scale: + coord_trans(y = "log2")
+t <- 2
+rest <- analize_opt(S0 = S0, K = K, T = 2, delta_t = delta_t,
+                    u = u, d = d, r = r, opt_type = "A", call_opt = FALSE)
+border_pointst <- rest %>% 
+  filter(if_executed == TRUE) %>% 
+  group_by(time) %>% 
+  summarise(maks = max(price))
+border_pointst <- border_pointst %>% 
+  mutate(T = t, predicted_maks = predict(model_barrier, newdata = data.frame(time = border_pointst$time, T = t)))
+
+
+########
+# Basic plot e-c
+resec <- analize_opt(S0 = S0, K = K, T = 2, delta_t = delta_t,
+                     u = u, d = d, r = r, opt_type = "E", call_opt = TRUE)
+ggplot(resec) +
+  theme_bw() +
+  geom_point(aes(x = time, y = price, color = if_executed)) +
+  geom_hline(yintercept = K) +
+  geom_text(aes(0.03, K,label = paste("K=", K), vjust = 2)) +
+  coord_trans(y = "log2") +
+  labs(title = "Opcja europejska call", color = "Czy wykonano", x = "Czas", y="Cena aktywa") +
+  scale_color_manual(labels=c("Nie", "Tak"), values=c("darkblue","cyan")) +
+  theme(plot.title = element_text(hjust = 0.5), legend.position = 'none')
+
+# Basic plot e-p
+resep <- analize_opt(S0 = S0, K = K, T = 2, delta_t = delta_t,
+                     u = u, d = d, r = r, opt_type = "E", call_opt = FALSE)
+ggplot(resep) +
+  theme_bw() +
+  geom_point(aes(x = time, y = price, color = if_executed)) +
+  geom_hline(yintercept = K) +
+  geom_text(aes(0.03, K,label = paste("K=", K), vjust = 2)) +
+  coord_trans(y = "log2") +
+  labs(title = "Opcja europejska put", color = "Czy wykonano", x = "Czas", y="Cena aktywa") +
+  scale_color_manual(labels=c("Nie", "Tak"), values=c("darkblue","cyan")) +
+  theme(plot.title = element_text(hjust = 0.5))
+
+# Basic plot a-p
+resap <- analize_opt(S0 = S0, K = K, T = 2, delta_t = delta_t,
+                    u = u, d = d, r = r, opt_type = "A", call_opt = FALSE)
+ggplot(resap) +
+  theme_bw() +
+  geom_point(aes(x = time, y = price, color = if_executed)) +
+  geom_hline(yintercept = K) +
+  geom_text(aes(0.03, K,label = paste("K=", K), vjust = 2)) +
+  coord_trans(y = "log2") +
+  labs(title = "Opcja amerykańska put", color = "Czy wykonano", x = "Czas", y="Cena aktywa") +
+  scale_color_manual(labels=c("Nie", "Tak"), values=c("darkblue","cyan")) +
+  theme(plot.title = element_text(hjust = 0.5), legend.position = 'none')
+
+# A-P PLot with predicted
+border_pointst <- resap %>% 
+  filter(if_executed == TRUE) %>% 
+  group_by(time) %>% 
+  summarise(maks = max(price))
+border_pointst <- border_pointst %>% 
+  mutate(T = 2, predicted_maks = predict(model_barrier, newdata = data.frame(time = border_pointst$time, T = 2)))
+
+ggplot() +
+  theme_bw() +
+  geom_point(data = resap, aes(x = time, y = price, color = if_executed)) +
+  geom_hline(yintercept = K) +
+  geom_text(aes(0.03, K,label = paste("K=", K), vjust = 2)) +
+  geom_line(data = border_pointst, aes(x = time, y = maks, linetype = 'Prawdziwy'), color = 'red', size = 1) +
+  geom_line(data = border_pointst, aes(x = time, y = predicted_maks, linetype = 'Przewidziany'), size = 1, color = 'red') +
+  coord_trans(y = "log2") +
+  labs(title = "Opcja amerykańska put z predykcją", color = "Czy wykonano", x = "Czas", y = "Cena aktywa", linetype = "Podział\nmomentów\nwykonania") +
+  scale_color_manual(labels=c("Nie", "Tak"), values=c("darkblue","cyan")) +
+  theme(plot.title = element_text(hjust = 0.5))
 
 
 
@@ -186,11 +289,11 @@ strike <- data.frame(strike)
 ggplot(strike,aes(x = strike))+
   geom_line(aes(y= V2,colour = 'europejski call'))+
   geom_line(aes(y=V3,colour='europejski put'))+
-  geom_line(aes(y=V4,colour='ameryka�ski call'))+geom_line(aes(y=V5,colour='ameryka�ski put'))+
-  scale_color_manual(name="opcja",breaks = c("europejski call","europejski put","ameryka�ski call","ameryka�ski put"),
+  geom_line(aes(y=V4,colour='amerykañski call'))+geom_line(aes(y=V5,colour='amerykañski put'))+
+  scale_color_manual(name="opcja",breaks = c("europejski call","europejski put","amerykañski call","amerykañski put"),
                      values=c("darkolivegreen","#66cc66","#003366","#33ccff"))+
   ylab("cena")+
-  ggtitle("Zale�no�� ceny opcji od ceny wykonania")+theme_bw()+theme(plot.title = element_text(hjust = 0.5))
+  ggtitle("Zale¿noœæ ceny opcji od ceny wykonania")+theme_bw()+theme(plot.title = element_text(hjust = 0.5))
 
 # strike blizej naszej sytuacji
 
@@ -215,11 +318,11 @@ strike <- data.frame(strike)
 ggplot(strike,aes(x = strike))+
   geom_line(aes(y= V2,colour = 'europejski call'))+
   geom_line(aes(y=V3,colour='europejski put'))+
-  geom_line(aes(y=V4,colour='ameryka�ski call'))+geom_line(aes(y=V5,colour='ameryka�ski put'))+
-  scale_color_manual(name="opcja",breaks = c("europejski call","europejski put","ameryka�ski call","ameryka�ski put"),
+  geom_line(aes(y=V4,colour='amerykañski call'))+geom_line(aes(y=V5,colour='amerykañski put'))+
+  scale_color_manual(name="opcja",breaks = c("europejski call","europejski put","amerykañski call","amerykañski put"),
                      values=c("darkolivegreen","#66cc66","#003366","#33ccff"))+
   ylab("cena")+
-  ggtitle("Zale�no�� ceny opcji od ceny wykonania")+theme_bw()+theme(plot.title = element_text(hjust = 0.5))
+  ggtitle("Zale¿noœæ ceny opcji od ceny wykonania")+theme_bw()+theme(plot.title = element_text(hjust = 0.5))
 
 
 
@@ -250,11 +353,11 @@ s0 <- data.frame(s0)
 ggplot(s0,aes(x = s0))+
   geom_line(aes(y= V2,colour = 'europejski call'))+
   geom_line(aes(y=V3,colour='europejski put'))+
-  geom_line(aes(y=V4,colour='ameryka�ski call'))+geom_line(aes(y=V5,colour='ameryka�ski put'))+
-  scale_color_manual(name="opcja",breaks = c("europejski call","europejski put","ameryka�ski call","ameryka�ski put"),
+  geom_line(aes(y=V4,colour='amerykañski call'))+geom_line(aes(y=V5,colour='amerykañski put'))+
+  scale_color_manual(name="opcja",breaks = c("europejski call","europejski put","amerykañski call","amerykañski put"),
                      values=c("darkolivegreen","#66cc66","#003366","#33ccff"))+
   ylab("cena")+
-  xlab("cena spot")+ggtitle("Zale�no�� ceny opcji od ceny spot")+theme_bw()+theme(plot.title = element_text(hjust = 0.5))
+  xlab("cena spot")+ggtitle("Zale¿noœæ ceny opcji od ceny spot")+theme_bw()+theme(plot.title = element_text(hjust = 0.5))
 
 
 # bardziej 'granicznie'
@@ -281,11 +384,11 @@ s0 <- data.frame(s0)
 ggplot(s0,aes(x = s0))+
   geom_line(aes(y= V2,colour = 'europejski call'))+
   geom_line(aes(y=V3,colour='europejski put'))+
-  geom_line(aes(y=V4,colour='ameryka�ski call'))+geom_line(aes(y=V5,colour='ameryka�ski put'))+
-  scale_color_manual(name="opcja",breaks = c("europejski call","europejski put","ameryka�ski call","ameryka�ski put"),
+  geom_line(aes(y=V4,colour='amerykañski call'))+geom_line(aes(y=V5,colour='amerykañski put'))+
+  scale_color_manual(name="opcja",breaks = c("europejski call","europejski put","amerykañski call","amerykañski put"),
                      values=c("darkolivegreen","#66cc66","#003366","#33ccff"))+
   ylab("cena")+
-  xlab("cena spot")+ggtitle("Zale�no�� ceny opcji od ceny spot")+theme_bw()+theme(plot.title = element_text(hjust = 0.5))
+  xlab("cena spot")+ggtitle("Zale¿noœæ ceny opcji od ceny spot")+theme_bw()+theme(plot.title = element_text(hjust = 0.5))
 
 
 ##################################################################################
@@ -314,8 +417,8 @@ library(latex2exp)
 ggplot(sig,aes(x = sig))+
   geom_line(aes(y= V2,colour = 'europejski call'))+
   geom_line(aes(y=V3,colour='europejski put'))+
-  geom_line(aes(y=V4,colour='ameryka�ski call'))+geom_line(aes(y=V5,colour='ameryka�ski put'))+
-  scale_color_manual(name="opcja",breaks = c("europejski call","europejski put","ameryka�ski call","ameryka�ski put"),
+  geom_line(aes(y=V4,colour='amerykañski call'))+geom_line(aes(y=V5,colour='amerykañski put'))+
+  scale_color_manual(name="opcja",breaks = c("europejski call","europejski put","amerykañski call","amerykañski put"),
                      values=c("darkolivegreen","#66cc66","#003366","#33ccff"))+
   ylab("cena")+
   xlab(TeX("$\\sigma$"))+ggtitle(TeX("Zaleznosc ceny opcji od $\\sigma$"))+theme_bw()+theme(plot.title = element_text(hjust = 0.5))
@@ -345,8 +448,8 @@ library(latex2exp)
 ggplot(sig,aes(x = sig))+
   geom_line(aes(y= V2,colour = 'europejski call'))+
   geom_line(aes(y=V3,colour='europejski put'))+
-  geom_line(aes(y=V4,colour='ameryka�ski call'))+geom_line(aes(y=V5,colour='ameryka�ski put'))+
-  scale_color_manual(name="opcja",breaks = c("europejski call","europejski put","ameryka�ski call","ameryka�ski put"),
+  geom_line(aes(y=V4,colour='amerykañski call'))+geom_line(aes(y=V5,colour='amerykañski put'))+
+  scale_color_manual(name="opcja",breaks = c("europejski call","europejski put","amerykañski call","amerykañski put"),
                      values=c("darkolivegreen","#66cc66","#003366","#33ccff"))+
   ylab("cena")+
   xlab(TeX("$\\sigma$"))+ggtitle(TeX("Zaleznosc ceny opcji od $\\sigma$"))+theme_bw()+theme(plot.title = element_text(hjust = 0.5))
@@ -375,11 +478,11 @@ t <- data.frame(t)
 ggplot(t,aes(x = t))+
   geom_line(aes(y= V2,colour = 'europejski call'))+
   geom_line(aes(y=V3,colour='europejski put'))+
-  geom_line(aes(y=V4,colour='ameryka�ski call'))+geom_line(aes(y=V5,colour='ameryka�ski put'))+
-  scale_color_manual(name="opcja",breaks = c("europejski call","europejski put","ameryka�ski call","ameryka�ski put"),
+  geom_line(aes(y=V4,colour='amerykañski call'))+geom_line(aes(y=V5,colour='amerykañski put'))+
+  scale_color_manual(name="opcja",breaks = c("europejski call","europejski put","amerykañski call","amerykañski put"),
                      values=c("darkolivegreen","#66cc66","#003366","#33ccff"))+
   ylab("cena")+
-  xlab("zapadalno��")+ggtitle("Zale�no�� ceny opcji od zapadalno�ci")+theme_bw()+theme(plot.title = element_text(hjust = 0.5))
+  xlab("zapadalnoœæ")+ggtitle("Zale¿noœæ ceny opcji od zapadalnoœci")+theme_bw()+theme(plot.title = element_text(hjust = 0.5))
 
 
 t <- 1:150
@@ -403,11 +506,11 @@ t <- t[1:108,]
 ggplot(t,aes(x = t))+
   geom_line(aes(y= V2,colour = 'europejski call'))+
   geom_line(aes(y=V3,colour='europejski put'))+
-  geom_line(aes(y=V4,colour='ameryka�ski call'))+geom_line(aes(y=V5,colour='ameryka�ski put'))+
-  scale_color_manual(name="opcja",breaks = c("europejski call","europejski put","ameryka�ski call","ameryka�ski put"),
+  geom_line(aes(y=V4,colour='amerykañski call'))+geom_line(aes(y=V5,colour='amerykañski put'))+
+  scale_color_manual(name="opcja",breaks = c("europejski call","europejski put","amerykañski call","amerykañski put"),
                      values=c("darkolivegreen","#66cc66","#003366","#33ccff"))+
   ylab("cena")+
-  xlab("zapadalno��")+ggtitle("Zale�no�� ceny opcji od zapadalno�ci")+theme_bw()+theme(plot.title = element_text(hjust = 0.5))
+  xlab("zapadalnoœæ")+ggtitle("Zale¿noœæ ceny opcji od zapadalnoœci")+theme_bw()+theme(plot.title = element_text(hjust = 0.5))
 
 ##################################################################################
 #     STOPA PROCENTOWA R
@@ -435,11 +538,11 @@ er <- data.frame(er)
 ggplot(er,aes(x = er))+
   geom_line(aes(y= V2,colour = 'europejski call'))+
   geom_line(aes(y=V3,colour='europejski put'))+
-  geom_line(aes(y=V4,colour='ameryka�ski call'))+geom_line(aes(y=V5,colour='ameryka�ski put'))+
-  scale_color_manual(name="opcja",breaks = c("europejski call","europejski put","ameryka�ski call","ameryka�ski put"),
+  geom_line(aes(y=V4,colour='amerykañski call'))+geom_line(aes(y=V5,colour='amerykañski put'))+
+  scale_color_manual(name="opcja",breaks = c("europejski call","europejski put","amerykañski call","amerykañski put"),
                      values=c("darkolivegreen","#66cc66","#003366","#33ccff"))+
   ylab("cena")+
-  xlab("r")+ggtitle("Zale�no�� ceny opcji od stopy procentowej")+theme_bw()+theme(plot.title = element_text(hjust = 0.5))
+  xlab("r")+ggtitle("Zale¿noœæ ceny opcji od stopy procentowej")+theme_bw()+theme(plot.title = element_text(hjust = 0.5))
 
 
 #nasz scenariusz
@@ -467,11 +570,11 @@ er <- data.frame(er)
 ggplot(er,aes(x = er))+
   geom_line(aes(y= V2,colour = 'europejski call'))+
   geom_line(aes(y=V3,colour='europejski put'))+
-  geom_line(aes(y=V4,colour='ameryka�ski call'))+geom_line(aes(y=V5,colour='ameryka�ski put'))+
-  scale_color_manual(name="opcja",breaks = c("europejski call","europejski put","ameryka�ski call","ameryka�ski put"),
+  geom_line(aes(y=V4,colour='amerykañski call'))+geom_line(aes(y=V5,colour='amerykañski put'))+
+  scale_color_manual(name="opcja",breaks = c("europejski call","europejski put","amerykañski call","amerykañski put"),
                      values=c("darkolivegreen","#66cc66","#003366","#33ccff"))+
   ylab("cena")+
-  xlab("r")+ggtitle("Zale�no�� ceny opcji od stopy procentowej")+theme_bw()+theme(plot.title = element_text(hjust = 0.5))
+  xlab("r")+ggtitle("Zale¿noœæ ceny opcji od stopy procentowej")+theme_bw()+theme(plot.title = element_text(hjust = 0.5))
 
 
 
@@ -486,25 +589,25 @@ ggplot(er,aes(x = er))+
 euro_call <- analize_opt(S0, K, T, delta_t, u, d, r, call_opt = FALSE, opt_type = "E")
 euro_call2 <- analize_opt(S0, K, T, delta_t, u, d, r, call_opt = FALSE, opt_type = "E")
 names(euro_call)[5] <- "akcje"
-names(euro_call2)[6] <- "got�wka"
+names(euro_call2)[6] <- "gotówka"
 ggplot() +
 geom_point(data=euro_call, aes(x=time, y=price, color=akcje), shape=17, size=4) +
 coord_trans(y = 'log2') +
 scale_fill_gradient(low="#cc99cc", high="#990099") +
-geom_point(data= euro_call2, aes(x=time, y=price, fill=got�wka), shape=25, size=2) +
-scale_fill_gradient(low="gray90", high="blue")+xlab("czas")+ylab("St")+ggtitle("Sk�ad portfela zabezpieczaj�cego - europejski put")+
+geom_point(data= euro_call2, aes(x=time, y=price, fill=gotówka), shape=25, size=2) +
+scale_fill_gradient(low="gray90", high="blue")+xlab("czas")+ylab("St")+ggtitle("Sk³ad portfela zabezpieczaj¹cego - europejski put")+
   theme_bw()
 
 
-# got�wka
+# gotówka
 
 ggplot() +
   geom_point(data=euro_call, aes(x=time, y=price, color=akcje), shape=17, size=4) +
-  coord_trans(y = 'log2')+ylab("St")+xlab("czas")+ggtitle("Portfel zabezpieczaj�cy-akcja")+theme_bw()
+  coord_trans(y = 'log2')+ylab("St")+xlab("czas")+ggtitle("Portfel zabezpieczaj¹cy-akcja")+theme_bw()
 
 ggplot() +
-  geom_point(data=euro_call2, aes(x=time, y=price, color=got�wka), shape=17, size=4) +
-  coord_trans(y = 'log2')+ylab("St")+xlab("czas")+ggtitle("Portfel zabezpieczaj�cy-got�wka")+theme_bw()
+  geom_point(data=euro_call2, aes(x=time, y=price, color=gotówka), shape=17, size=4) +
+  coord_trans(y = 'log2')+ylab("St")+xlab("czas")+ggtitle("Portfel zabezpieczaj¹cy-gotówka")+theme_bw()
 
 
 ##################################################################################
@@ -513,22 +616,22 @@ ggplot() +
 euro_call <- analize_opt(S0, K, T, delta_t, u, d, r, call_opt = TRUE, opt_type = "E")
 euro_call2 <- analize_opt(S0, K, T, delta_t, u, d, r, call_opt = TRUE, opt_type = "E")
 names(euro_call)[5] <- "akcje"
-names(euro_call2)[6] <- "got�wka"
+names(euro_call2)[6] <- "gotówka"
 ggplot() +
   geom_point(data=euro_call, aes(x=time, y=price, color=akcje), shape=17, size=4) +
   coord_trans(y = 'log2') +
   scale_fill_gradient(low="#cc99cc", high="#990099") +
-  geom_point(data= euro_call2, aes(x=time, y=price, fill=got�wka), shape=25, size=2) +
-  scale_fill_gradient(low="gray90", high="blue")+xlab("czas")+ylab("St")+ggtitle("Sk�ad portfela zabezpieczaj�cego - europejski call")+
+  geom_point(data= euro_call2, aes(x=time, y=price, fill=gotówka), shape=25, size=2) +
+  scale_fill_gradient(low="gray90", high="blue")+xlab("czas")+ylab("St")+ggtitle("Sk³ad portfela zabezpieczaj¹cego - europejski call")+
   theme_bw()
 
 ggplot() +
   geom_point(data=euro_call, aes(x=time, y=price, color=akcje), shape=17, size=4) +
-  coord_trans(y = 'log2')+ylab("St")+xlab("czas")+ggtitle("Portfel zabezpieczaj�cy-akcja")+theme_bw()
+  coord_trans(y = 'log2')+ylab("St")+xlab("czas")+ggtitle("Portfel zabezpieczaj¹cy-akcja")+theme_bw()
 
 ggplot() +
-  geom_point(data=euro_call2, aes(x=time, y=price, color=got�wka), shape=17, size=4) +
-  coord_trans(y = 'log2')+ylab("St")+xlab("czas")+ggtitle("Portfel zabezpieczaj�cy-got�wka")+theme_bw()
+  geom_point(data=euro_call2, aes(x=time, y=price, color=gotówka), shape=17, size=4) +
+  coord_trans(y = 'log2')+ylab("St")+xlab("czas")+ggtitle("Portfel zabezpieczaj¹cy-gotówka")+theme_bw()
 
 
 ##################################################################################
@@ -538,22 +641,22 @@ ggplot() +
 euro_call <- analize_opt(S0, K, T, delta_t, u, d, r, call_opt = TRUE, opt_type = "A")
 euro_call2 <- analize_opt(S0, K, T, delta_t, u, d, r, call_opt = TRUE, opt_type = "A")
 names(euro_call)[5] <- "akcje"
-names(euro_call2)[6] <- "got�wka"
+names(euro_call2)[6] <- "gotówka"
 ggplot() +
   geom_point(data=euro_call, aes(x=time, y=price, color=akcje), shape=17, size=4) +
   coord_trans(y = 'log2') +
   scale_fill_gradient(low="#cc99cc", high="#990099") +
-  geom_point(data= euro_call2, aes(x=time, y=price, fill=got�wka), shape=25, size=2) +
-  scale_fill_gradient(low="gray90", high="blue")+xlab("czas")+ylab("St")+ggtitle("Sk�ad portfela zabezpieczaj�cego - ameryka�ski call")+
+  geom_point(data= euro_call2, aes(x=time, y=price, fill=gotówka), shape=25, size=2) +
+  scale_fill_gradient(low="gray90", high="blue")+xlab("czas")+ylab("St")+ggtitle("Sk³ad portfela zabezpieczaj¹cego - amerykañski call")+
   theme_bw()
 
 ggplot() +
   geom_point(data=euro_call, aes(x=time, y=price, color=akcje), shape=17, size=4) +
-  coord_trans(y = 'log2')+ylab("St")+xlab("czas")+ggtitle("Portfel zabezpieczaj�cy-akcja")+theme_bw()
+  coord_trans(y = 'log2')+ylab("St")+xlab("czas")+ggtitle("Portfel zabezpieczaj¹cy-akcja")+theme_bw()
 
 ggplot() +
-  geom_point(data=euro_call2, aes(x=time, y=price, color=got�wka), shape=17, size=4) +
-  coord_trans(y = 'log2')+ylab("St")+xlab("czas")+ggtitle("Portfel zabezpieczaj�cy-got�wka")+theme_bw()
+  geom_point(data=euro_call2, aes(x=time, y=price, color=gotówka), shape=17, size=4) +
+  coord_trans(y = 'log2')+ylab("St")+xlab("czas")+ggtitle("Portfel zabezpieczaj¹cy-gotówka")+theme_bw()
 
 
 
@@ -566,20 +669,20 @@ ggplot() +
 euro_call <- analize_opt(S0, K, T, delta_t, u, d, r, call_opt = FALSE, opt_type = "A")
 euro_call2 <- analize_opt(S0, K, T, delta_t, u, d, r, call_opt = FALSE, opt_type = "A")
 names(euro_call)[5] <- "akcje"
-names(euro_call2)[6] <- "got�wka"
+names(euro_call2)[6] <- "gotówka"
 ggplot() +
   geom_point(data=euro_call, aes(x=time, y=price, color=akcje), shape=17, size=4) +
   coord_trans(y = 'log2') +
   scale_fill_gradient(low="#cc99cc", high="#990099") +
-  geom_point(data= euro_call2, aes(x=time, y=price, fill=got�wka), shape=25, size=2) +
-  scale_fill_gradient(low="gray90", high="blue")+xlab("czas")+ylab("St")+ggtitle("Sk�ad portfela zabezpieczaj�cego - ameryka�ski put")+
+  geom_point(data= euro_call2, aes(x=time, y=price, fill=gotówka), shape=25, size=2) +
+  scale_fill_gradient(low="gray90", high="blue")+xlab("czas")+ylab("St")+ggtitle("Sk³ad portfela zabezpieczaj¹cego - amerykañski put")+
   theme_bw()
 
 ggplot() +
   geom_point(data=euro_call, aes(x=time, y=price, color=akcje), shape=17, size=4) +
-  coord_trans(y = 'log2')+ylab("St")+xlab("czas")+ggtitle("Portfel zabezpieczaj�cy-akcja")+theme_bw()
+  coord_trans(y = 'log2')+ylab("St")+xlab("czas")+ggtitle("Portfel zabezpieczaj¹cy-akcja")+theme_bw()
 
 ggplot() +
-  geom_point(data=euro_call2, aes(x=time, y=price, color=got�wka), shape=17, size=4) +
-  coord_trans(y = 'log2')+ylab("St")+xlab("czas")+ggtitle("Portfel zabezpieczaj�cy-got�wka")+theme_bw()
+  geom_point(data=euro_call2, aes(x=time, y=price, color=gotówka), shape=17, size=4) +
+  coord_trans(y = 'log2')+ylab("St")+xlab("czas")+ggtitle("Portfel zabezpieczaj¹cy-gotówka")+theme_bw()
 
