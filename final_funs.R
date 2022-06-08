@@ -576,6 +576,26 @@ ggplot(er,aes(x = er))+
   ylab("cena")+
   xlab("r")+ggtitle("Zale¿noœæ ceny opcji od stopy procentowej")+theme_bw()+theme(plot.title = element_text(hjust = 0.5))
 
+##################################################################################
+# DELTA T (LICZBA KROKÓW)
+##################################################################################
+Delta_t<-c(T/(1:150))
+put_e_price<-c()
+put_a_price<-c()
+call_e_price<-c()
+call_a_price<-c()
+for ( i in Delta_t){
+  u=exp(sigma*sqrt(i))
+  d=exp(-sigma*sqrt(i))
+  a<-dim(analize_opt(S0, K, T,i,u,d, r, call_opt = F, opt_type = "E"))[1]
+  put_e_price[which(Delta_t==i)]<-analize_opt(S0, K, T,i,u,d,r, call_opt = FALSE, opt_type = "E")[a,2]
+  put_a_price[which(Delta_t==i)]<-analize_opt(S0, K, T,i,u,d,r, call_opt = FALSE, opt_type = "A")[a,2]
+  call_e_price[which(Delta_t==i)]<-analize_opt(S0, K, T,i,u,d,r, call_opt = TRUE, opt_type = "E")[a,2]
+  call_a_price[which(Delta_t==i)]<-analize_opt(S0, K, T,i,u,d,r, call_opt = TRUE, opt_type = "A")[a,2]
+}
+library(ggplot2)
+pricing_time2<-data.frame(liczba_kroków=rep(c(1:150),4),typ=rep(c("europejski put","amerykański put","europejski call","amerykański call"),each=150),cena=c(put_e_price,put_a_price,call_e_price,call_a_price))
+ggplot(pricing_time2,aes(x=liczba_kroków,y=cena,color=typ))+geom_line(size=1)+theme_bw()+ggtitle("Wrażliwość ceny opcji na liczbę kroków")+theme(plot.title=element_text(hjust=0.5))+xlab("liczba kroków")+scale_color_manual(name="typ",breaks = c("europejski call","europejski put","amerykański call","amerykański put"),values=c("darkolivegreen","#66cc66","#003366","#33ccff"))
 
 
 ##################################################################################
